@@ -1,0 +1,1431 @@
+<!doctype html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>来认识一下『Acta·行记』。</title>
+  <meta name="description" content="Acta 是一个本地优先、开源的笔记与待办应用。笔记和待办放进同一个工作区，从想法到行动不用切换软件。桌面、手机、浏览器同一套界面，离线也能用。">
+  <meta name="theme-color" content="#f7f6f1">
+  <link rel="icon" type="image/png" href="assets/acta-logo.png">
+  <style>
+    /* one material decision: a near-neutral paper tint; one restrained sage accent.
+   type is each platform's native system sans - a defensible choice for a
+   local-first native app that already ships on Windows, macOS, Android, web. */
+    :root {
+      --ink: #20231d;
+      --muted: #5b5f56;
+      --faint: #8c9087;
+      --rule: #e3e0d4;
+      --paper: #f7f6f1;
+      --white: #ffffff;
+      --accent: #4f6a52;
+      --accent-ink: #3b4f3e;
+      --todo: #006adb;
+      /* 待办蓝 */
+      --note: #f1bd00;
+      /* 笔记黄 */
+      --measure: 88ch;
+      --fig: 840px;
+      --sans: "Segoe UI Variable", "PingFang SC", "Microsoft YaHei", system-ui, -apple-system, sans-serif;
+      --serif: "New York", "Iowan Old Style", Cambria, Georgia, "Source Han Serif", "STSong", SimSun, serif;
+      --ease: cubic-bezier(.22, .61, .36, 1);
+    }
+
+    * {
+      box-sizing: border-box
+    }
+
+    html {
+      scroll-behavior: smooth;
+      -webkit-text-size-adjust: 100%;
+      overscroll-behavior-y: none
+    }
+
+    body {
+      margin: 0;
+      background: var(--paper);
+      color: var(--ink);
+      font-family: var(--sans);
+      font-size: 18px;
+      line-height: 1.75;
+      -webkit-font-smoothing: antialiased;
+      text-rendering: optimizeLegibility;
+      font-optical-sizing: auto;
+      touch-action: manipulation;
+      cursor: default;
+      caret-color: transparent
+    }
+
+    /* keep text selectable, but drop the I-beam text cursor */
+    a,
+    button,
+    input,
+    select,
+    textarea,
+    [role="button"] {
+      cursor: pointer
+    }
+
+    a {
+      color: var(--accent);
+      text-decoration: none;
+      border-bottom: 1px solid color-mix(in srgb, var(--accent) 35%, transparent);
+      transition: color 150ms var(--ease), border-color 150ms var(--ease)
+    }
+
+    a:hover {
+      color: var(--accent-ink);
+      border-bottom-color: var(--accent-ink)
+    }
+
+    a:active {
+      color: var(--accent-ink)
+    }
+
+    img {
+      max-width: 100%;
+      display: block
+    }
+
+    p {
+      margin: 0;
+      white-space:pre-wrap;
+    }
+
+    /* top bar: logo + one link + lang. no link list.
+   a gradient blur layer (::before) replaces the opaque strip — content
+   scrolling under the bar dissolves into blur instead of hitting a hard
+   divider. after a 5% dead zone the bar shrinks into a floating glass pill. */
+    .bar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 50;
+      background: transparent
+    }
+
+    .bar::before {
+      content: '';
+      position: absolute;
+      top: -50px;
+      left: 0;
+      right: 0;
+      bottom: -100px;
+      background: color-mix(in srgb, var(--paper) 85%, transparent);
+      -webkit-backdrop-filter: blur(20px) saturate(180%);
+      backdrop-filter: blur(15px) saturate(200%);
+      -webkit-mask-image: linear-gradient(to bottom, black 0%, rgba(0, 0, 0) 45%, rgba(0, 0, 0, .30) 85%, transparent 100%);
+      mask-image: linear-gradient(to bottom, black 0%, rgba(0, 0, 0) 45%, rgba(0, 0, 0, .30) 85%, transparent 100%);
+      z-index: -1;
+      pointer-events: none;
+      transition: background .35s var(--ease)
+    }
+
+    .bar-in {
+      position: relative;
+      z-index: 1;
+      max-width: 1040px;
+      margin: 0 auto;
+      padding: 0 28px;
+      height: 58px;
+      border: 1px solid transparent;
+      box-shadow: 0 0 0 0 transparent;
+      transform: translateY(0);
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      contain: layout;
+      will-change: transform, max-width, height;
+      transition: max-width .35s var(--ease), height .35s var(--ease), padding .35s var(--ease), border-radius .35s var(--ease), border-color .35s var(--ease), background .35s var(--ease), box-shadow .35s var(--ease), transform .35s var(--ease)
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      font-weight: 700;
+      letter-spacing: -.01em;
+      color: var(--ink);
+      border-bottom: 0;
+      transition: color 150ms var(--ease), opacity 150ms var(--ease)
+    }
+
+    .brand:hover {
+      color: var(--accent)
+    }
+
+    .brand:active {
+      opacity: .7
+    }
+
+    .brand img {
+      height: 27px;
+      width: auto;
+      transition: height .35s var(--ease), transform .3s var(--ease)
+    }
+
+    .brand:hover img {
+      transform: scale(1.05)
+    }
+
+    .bar-r {
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      gap: 18px
+    }
+
+    .lang {
+      position: relative;
+      display: flex
+    }
+
+    .lang>button {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 34px;
+      height: 34px;
+      border: 0;
+      background: none;
+      padding: 0;
+      color: var(--faint);
+      cursor: pointer;
+      font-family: inherit;
+      border-radius: 999px;
+      transition: color 150ms var(--ease), background-color 150ms var(--ease), transform 100ms var(--ease)
+    }
+
+    .lang>button svg {
+      width: 18px;
+      height: 18px;
+      display: block
+    }
+
+    .lang>button:hover {
+      color: var(--ink);
+      background: color-mix(in srgb, var(--ink) 6%, transparent)
+    }
+
+    .lang>button:active {
+      transform: scale(.92);
+      background: color-mix(in srgb, var(--ink) 8%, transparent)
+    }
+
+    /* dropdown menu: a translucent pill that materializes from the trigger,
+   scaling out of its top-right origin and fading in together. */
+    .lang-menu {
+      position: absolute;
+      top: calc(100% + 8px);
+      right: 0;
+      min-width: 160px;
+      padding: 6px;
+      box-sizing: border-box;
+      background: color-mix(in srgb, var(--paper) 82%, transparent);
+      -webkit-backdrop-filter: saturate(180%) blur(20px);
+      backdrop-filter: saturate(180%) blur(20px);
+      border: 1px solid var(--rule);
+      border-radius: 14px;
+      box-shadow: 0 18px 40px rgb(79 107 82 / 18%), inset 0 1px 0 rgba(255, 255, 255, .6);
+      transform-origin: top right;
+      visibility: hidden;
+      opacity: 0;
+      transform: scale(.92) translateY(-4px);
+      transition: opacity .18s var(--ease), transform .25s var(--ease), visibility 0s linear .25s;
+      z-index: 60
+    }
+
+    .lang-menu.open {
+      visibility: visible;
+      opacity: 1;
+      transform: scale(1) translateY(0);
+      transition: opacity .18s var(--ease), transform .25s var(--ease), visibility 0s
+    }
+
+    .lang-menu button {
+      display: flex;
+      width: 100%;
+      height: auto;
+      padding: 8px 12px;
+      border: 0;
+      background: none;
+      font-size: 14px;
+      color: var(--ink);
+      cursor: pointer;
+      font-family: inherit;
+      border-radius: 9px;
+      transition: background-color 150ms var(--ease)
+    }
+
+    .lang-menu button.on {
+      font-weight: 700;
+      color: var(--accent)
+    }
+
+    .lang-menu button:hover {
+      background: color-mix(in srgb, var(--ink) 6%, transparent)
+    }
+
+    .lang-menu button:active {
+      background: color-mix(in srgb, var(--ink) 10%, transparent)
+    }
+
+    .icon-btn {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 34px;
+      height: 34px;
+      border: 0;
+      background: none;
+      padding: 0;
+      color: var(--faint);
+      cursor: pointer;
+      font-family: inherit;
+      border-radius: 999px;
+      transition: color 150ms var(--ease), background-color 150ms var(--ease), transform 100ms var(--ease)
+    }
+
+    .icon-btn svg {
+      width: 18px;
+      height: 18px;
+      display: block
+    }
+
+    .icon-btn:hover {
+      color: var(--ink);
+      background: color-mix(in srgb, var(--ink) 6%, transparent)
+    }
+
+    .icon-btn:active {
+      transform: scale(.92);
+      background: color-mix(in srgb, var(--ink) 8%, transparent)
+    }
+
+    /* tooltip: a small dark pill that fades in below the trigger on hover/focus */
+    .icon-btn .tip,
+    .lang>button .tip {
+      position: absolute;
+      top: calc(100% + 8px);
+      right: 50%;
+      transform: translate(50%, 4px);
+      white-space: nowrap;
+      padding: 5px 10px;
+      font-size: 12.5px;
+      font-weight: 500;
+      color: #fff;
+      background: color-mix(in srgb, var(--ink) 88%, transparent);
+      box-shadow: 0 6px 16px rgb(32 35 29 / 25%);
+      border-radius: 8px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .15s var(--ease), transform .15s var(--ease);
+      z-index: 70
+    }
+
+    .icon-btn:hover .tip,
+    .icon-btn:focus-visible .tip,
+    .lang>button:hover .tip,
+    .lang>button:focus-visible .tip {
+      opacity: 1;
+      transform: translate(50%, 0)
+    }
+
+    /* hide the tooltip while the language menu is open */
+    .lang:has(.lang-menu.open) .tip {
+      opacity: 0
+    }
+
+    /* scrolled: shrink into a centered floating pill */
+    .bar.scrolled {
+      background: transparent
+    }
+
+    .bar.scrolled::before {
+      background: color-mix(in srgb, var(--paper) 50%, transparent)
+    }
+
+    .bar.scrolled .bar-in {
+      max-width: min(520px, calc(100% - 28px));
+      height: 46px;
+      padding: 0 20px;
+      border-radius: 999px;
+      border-color: var(--rule);
+      background: color-mix(in srgb, var(--paper) 78%, transparent);
+      box-shadow: 0 15px 30px rgb(79 107 82 / 15%), inset 0 1px 0 rgba(255, 255, 255, .5);
+      transform: translateY(10px);
+      -webkit-backdrop-filter: saturate(180%) blur(16px);
+      backdrop-filter: saturate(180%) blur(16px)
+    }
+
+    .bar.scrolled .brand img {
+      height: 23px
+    }
+
+    @media (prefers-reduced-motion:reduce) {
+
+      .bar,
+      .bar-in,
+      .brand img,
+      .bar::before {
+        transition: none
+      }
+
+      .lang-menu {
+        transform: none;
+        transition: opacity 150ms ease
+      }
+    }
+
+    @media (prefers-reduced-transparency:reduce) {
+      .bar::before {
+        background: var(--paper);
+        -webkit-backdrop-filter: none;
+        backdrop-filter: none;
+        -webkit-mask-image: none;
+        mask-image: none
+      }
+
+      .bar.scrolled .bar-in {
+        background: var(--paper);
+        -webkit-backdrop-filter: none;
+        backdrop-filter: none
+      }
+
+      .lang-menu {
+        background: var(--paper);
+        -webkit-backdrop-filter: none;
+        backdrop-filter: none
+      }
+
+      .dialog-card {
+        background: var(--paper);
+        -webkit-backdrop-filter: none;
+        backdrop-filter: none
+      }
+
+      .dialog-backdrop {
+        background: rgb(32 35 29 / .5);
+        -webkit-backdrop-filter: none;
+        backdrop-filter: none
+      }
+    }
+
+    @media (prefers-contrast:more) {
+      .bar::before {
+        background: var(--white);
+        -webkit-mask-image: none;
+        mask-image: none
+      }
+
+      .bar.scrolled .bar-in {
+        background: var(--white);
+        border-color: var(--ink)
+      }
+
+      a {
+        border-bottom-color: var(--accent)
+      }
+
+      .dl a {
+        border-bottom-color: var(--ink)
+      }
+    }
+
+    /* layout: a single centered column. figures break out a little wider. */
+    main {
+      max-width: var(--measure);
+      margin: 0 auto;
+      padding: 144px 40px 40px;
+      transition: opacity .2s var(--ease), transform .2s var(--ease)
+    }
+
+    main.switching {
+      opacity: 0;
+      transform: translateY(8px)
+    }
+
+    .figure {
+      max-width: var(--fig);
+      margin: 56px auto
+    }
+
+    figure {
+      margin: 0
+    }
+
+    figure img {
+      width: 100%;
+      border: 1px solid var(--rule);
+      border-radius: 13px;
+      background: var(--white);
+      box-shadow: rgba(135, 128, 99, 0.15) 0px 17px 30px;
+    }
+
+    figcaption {
+      margin-top: 20px;
+      font-size: 13.5px;
+      color: var(--faint);
+      line-height: 1.5;
+      text-align: center;
+      letter-spacing: .005em
+    }
+
+    /* type scale with real contrast; no kickers, no all-caps. */
+    h1 {
+      font-family: var(--serif);
+      font-weight: 900;
+      letter-spacing: -.025em;
+      line-height: 1.08;
+      font-size: clamp(65px, 7.8vw, 78px);
+      margin: 0 0 22px;
+      text-wrap: balance;
+      text-align: center;
+    }
+
+    h1 .act {
+      color: var(--todo)
+    }
+
+    h1 .note {
+      color: var(--note)
+    }
+
+    .lead {
+      font-size: 21px;
+      color: var(--muted);
+      line-height: 1.7;
+      text-align: center;
+      white-space: pre-wrap;
+    }
+
+    /* Chinese optically corrects for the trailing full-width period: the
+   centered line reads shifted left by half a full-width box, so nudge it
+   right by one half-width (0.5em). english needs no correction. */
+    body.lang-zh h1,
+    body.lang-zh .lead,
+    body.lang-zh figcaption,
+    body.lang-zh .dialog-card h3,
+    body.lang-zh .dialog-card p {
+      padding-left: .5em
+    }
+
+    /* primary action pair: a filled Download and a tinted Try-the-web.
+   instant press feedback, capsule shape, restrained shadow lift. */
+    .cta {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 18px;
+      flex-wrap: wrap;
+      margin: 30px 0 0
+    }
+
+    .cta a {
+      display: inline-flex;
+      align-items: center
+    }
+
+    /* balance the pair: give the text link equal optical weight to the button */
+    .cta a:not(.btn) {
+      font-size: 16px;
+      font-weight: 600;
+      padding: 0 4px;
+      line-height: 1;
+      border-bottom: 0;
+      gap: 6px
+    }
+
+    .cta a:not(.btn) svg {
+      width: 15px;
+      height: 15px;
+      flex: none
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      height: 48px;
+      padding: 0 24px;
+      border-radius: 999px;
+      border: 1px solid transparent;
+      font-size: 16px;
+      font-weight: 600;
+      font-family: inherit;
+      text-decoration: none;
+      transition: transform .1s var(--ease), background-color .15s var(--ease), box-shadow .2s var(--ease), color .15s var(--ease)
+    }
+
+    .btn:active {
+      transform: scale(.97)
+    }
+
+    .btn:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 3px
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: #fff;
+      box-shadow: 0 10px 22px rgb(79 107 82 / 28%)
+    }
+
+    .btn-primary:hover {
+      background: var(--accent-ink);
+      color: #fff;
+      border-color: transparent;
+      box-shadow: 0 14px 28px rgb(79 107 82 / 32%)
+    }
+
+    h2 {
+      font-weight: 700;
+      letter-spacing: -.012em;
+      line-height: 1.2;
+      font-size: clamp(24px, 3vw, 32px);
+      margin: 88px 0 16px;
+      text-wrap: balance
+    }
+
+    h2:first-of-type {
+      margin-top: 88px
+    }
+
+    p+p {
+      margin-top: 20px
+    }
+
+    .prose p {
+      color: var(--ink)
+    }
+
+    .prose p+p {
+      color: var(--muted)
+    }
+
+    /* a real list where a list is the right shape; no card grid. */
+    ul.items {
+      list-style: none;
+      margin: 18px 0 0;
+      padding: 0
+    }
+
+    ul.items li {
+      padding: 15px 0;
+      border-top: 1px solid var(--rule);
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px 24px;
+      align-items: baseline
+    }
+
+    ul.items li:last-child {
+      border-bottom: 1px solid var(--rule)
+    }
+
+    ul.items b {
+      font-weight: 650;
+      font-size: 16px
+    }
+
+    ul.items span {
+      color: var(--muted);
+      font-size: 14.5px;
+      line-height: 1.55;
+      letter-spacing: .003em
+    }
+
+    /* downloads: a plain list of links, not equal cards. */
+    .dl {
+      margin: 18px 0 0;
+      border-top: 1px solid var(--rule)
+    }
+
+    .dl a {
+      display: flex;
+      align-items: baseline;
+      gap: 14px;
+      padding: 17px 0;
+      border-bottom: 1px solid var(--rule);
+      color: var(--ink);
+      font-weight: 600;
+      font-size: 16px;
+      transition: color 150ms var(--ease), background-color 150ms var(--ease), transform 100ms var(--ease)
+    }
+
+    .dl a:hover {
+      color: var(--accent)
+    }
+
+    .dl a:active {
+      transform: scale(.985);
+      background-color: color-mix(in srgb, var(--accent) 5%, transparent)
+    }
+
+    .dl a .v {
+      margin-left: auto;
+      color: var(--faint);
+      font-weight: 400;
+      font-size: 13.5px;
+      letter-spacing: .005em
+    }
+
+    /* footer: one line, two halves. */
+    footer {
+      max-width: 1040px;
+      margin: 120px auto 0;
+      padding: 32px 40px 48px;
+      border-top: 1px solid var(--rule);
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+      font-size: 13.5px;
+      color: var(--faint)
+    }
+
+    footer a {
+      color: var(--muted);
+      font-weight: 500
+    }
+
+    footer .links {
+      display: flex;
+      gap: 18px
+    }
+
+    /* one subtle reveal: opacity + small translate, standard ease. */
+    [data-reveal] {
+      opacity: 0;
+      transform: translateY(12px);
+      transition: opacity .6s var(--ease), transform .6s var(--ease);
+      transition-delay: calc(var(--i, 0)*80ms);
+      will-change: transform, opacity
+    }
+
+    [data-reveal].in {
+      opacity: 1;
+      transform: none;
+      will-change: auto
+    }
+
+    /* confirm dialog: an Apple-style modal. a dimming scrim + a translucent
+   material card that materializes up from center (scale + blur arrive
+   together); critically damped, no overshoot. */
+    .dialog {
+      position: fixed;
+      inset: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .22s var(--ease)
+    }
+
+    .dialog.open {
+      opacity: 1;
+      pointer-events: auto
+    }
+
+    .dialog-backdrop {
+      position: absolute;
+      inset: 0;
+      background: rgb(32 35 29 / 0);
+      -webkit-backdrop-filter: blur(6px);
+      backdrop-filter: blur(6px);
+      transition: background-color .22s var(--ease)
+    }
+
+    .dialog.open .dialog-backdrop {
+      background: rgb(32 35 29 / .35)
+    }
+
+    .dialog-card {
+      position: relative;
+      width: min(400px, 100%);
+      padding: 28px 28px 22px;
+      background: color-mix(in srgb, var(--paper) 90%, transparent);
+      -webkit-backdrop-filter: saturate(180%) blur(24px);
+      backdrop-filter: saturate(180%) blur(24px);
+      border: 1px solid var(--rule);
+      border-radius: 20px;
+      box-shadow: 0 30px 60px rgb(32 35 29 / .28), inset 0 1px 0 rgba(255, 255, 255, .6);
+      transform: scale(.92) translateY(8px);
+      transition: transform .28s var(--ease)
+    }
+
+    .dialog.open .dialog-card {
+      transform: scale(1) translateY(0)
+    }
+
+    .dialog-card h3 {
+      margin: 0 0 10px;
+      font-size: 19px;
+      font-weight: 700;
+      letter-spacing: -.01em;
+      text-align: center
+    }
+
+    .dialog-card p {
+      margin: 0 0 22px;
+      font-size: 15px;
+      line-height: 1.6;
+      color: var(--muted);
+      text-align: center
+    }
+
+    .dialog-actions {
+      display: flex;
+      gap: 10px
+    }
+
+    .dlg-btn {
+      flex: 1;
+      height: 42px;
+      border: 0;
+      border-radius: 999px;
+      font-size: 15px;
+      font-weight: 600;
+      font-family: inherit;
+      cursor: pointer;
+      transition: transform .1s var(--ease), background-color .15s var(--ease), color .15s var(--ease)
+    }
+
+    .dlg-btn:active {
+      transform: scale(.97)
+    }
+
+    .dlg-btn:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px
+    }
+
+    .dlg-cancel {
+      background: color-mix(in srgb, var(--ink) 8%, transparent);
+      color: var(--ink)
+    }
+
+    .dlg-cancel:hover {
+      background: color-mix(in srgb, var(--ink) 12%, transparent)
+    }
+
+    .dlg-primary {
+      background: var(--accent);
+      color: #fff;
+      box-shadow: 0 8px 18px rgb(79 107 82 / .28)
+    }
+
+    .dlg-primary:hover {
+      background: var(--accent-ink)
+    }
+
+    /* pull-to-refresh: a spinner that grows out of the top edge as the user
+   pulls down, then spins while the page reloads. touch-only. */
+    /* pull-to-refresh: a progress ring that fills as you pull. once the user
+   holds still past the threshold it morphs into a pill prompting release.
+   touch-only. */
+    .ptr {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: var(--ptr, 0px);
+      display: flex;
+      justify-content: center;
+      align-items: flex-end;
+      z-index: 200;
+      pointer-events: none;
+      transition: height .3s cubic-bezier(.22, .61, .36, 1)
+    }
+
+    body.ptr-dragging .ptr {
+      transition-duration: 0s
+    }
+
+    .ptr-inner {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 34px;
+      height: 34px;
+      margin-bottom: 14px;
+      overflow: hidden;
+      border-radius: 999px;
+      background: color-mix(in srgb, var(--paper) 85%, transparent);
+      -webkit-backdrop-filter: blur(12px);
+      backdrop-filter: blur(12px);
+      box-shadow: 0 12px 26px rgb(32 35 29 / .18), inset 0 1px 0 rgba(255, 255, 255, .7);
+      opacity: 0;
+      transform: translateY(10px) scale(.9);
+      transition: opacity .25s cubic-bezier(.22, .61, .36, 1), transform .25s cubic-bezier(.22, .61, .36, 1), width .32s cubic-bezier(.22, .61, .36, 1)
+    }
+
+    body.ptr-active .ptr-inner {
+      opacity: 1;
+      transform: translateY(0) scale(1)
+    }
+
+    body.ptr-hold .ptr-inner {
+      width: 140px
+    }
+
+    .ptr-ring {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: 24px;
+      height: 24px;
+      transform: translate(-50%, -50%);
+      transition: opacity .2s cubic-bezier(.22, .61, .36, 1)
+    }
+
+    body.ptr-hold .ptr-ring {
+      opacity: 0
+    }
+
+    .ptr-ring .track {
+      fill: none;
+      stroke: color-mix(in srgb, var(--accent) 22%, transparent);
+      stroke-width: 2.5
+    }
+
+    .ptr-ring .check {
+      fill: none;
+      stroke: var(--todo);
+      stroke-width: 2.75;
+      stroke-linecap: round;
+      stroke-linejoin: round
+    }
+
+    .ptr-ring .note-body,
+    .ptr-ring .note-line {
+      fill: none;
+      stroke: var(--note);
+      stroke-width: 2.2;
+      stroke-linecap: round;
+      stroke-linejoin: round
+    }
+
+    .ptr-ring .glyph-check {
+      opacity: 1;
+      transition: opacity .18s cubic-bezier(.22, .61, .36, 1)
+    }
+
+    .ptr-ring .glyph-note {
+      opacity: 0;
+      transition: opacity .18s cubic-bezier(.22, .61, .36, 1)
+    }
+
+    body.ptr-note .ptr-ring .glyph-check {
+      opacity: 0
+    }
+
+    body.ptr-note .ptr-ring .glyph-note {
+      opacity: 1
+    }
+
+    .ptr-label {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      white-space: nowrap;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--ink);
+      opacity: 0;
+      transition: opacity .2s cubic-bezier(.22, .61, .36, 1)
+    }
+
+    body.ptr-hold .ptr-label {
+      opacity: 1
+    }
+
+    @media (prefers-reduced-motion:reduce) {
+      [data-reveal] {
+        opacity: 1;
+        transform: none;
+        transition: none
+      }
+
+      main {
+        transition: opacity .15s ease
+      }
+
+      main.switching {
+        transform: none
+      }
+
+      .ptr {
+        transition: none
+      }
+
+      .ptr-inner {
+        transition: opacity .15s ease
+      }
+
+      .ptr-ring,
+      .ptr-label {
+        transition: opacity .15s ease
+      }
+
+      .dialog-card,
+      .dialog-backdrop {
+        transform: none !important
+      }
+
+      .dialog-card {
+        transition: opacity .15s ease
+      }
+
+      .dialog-backdrop {
+        transition: none;
+        -webkit-backdrop-filter: none;
+        backdrop-filter: none
+      }
+
+      html {
+        scroll-behavior: auto
+      }
+    }
+
+    @media (max-width:680px) {
+      main {
+        padding: 104px 22px 24px
+      }
+
+      h1 {
+        margin: 28px 0 22px
+      }
+
+      .figure {
+        margin: 40px 0
+      }
+
+      ul.items li {
+        grid-template-columns: 1fr
+      }
+
+      .bar-in {
+        max-width: 100%
+      }
+
+      .bar.scrolled .bar-in {
+        max-width: calc(100% - 28px)
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="ptr" id="ptr" aria-hidden="true">
+    <div class="ptr-inner">
+      <svg class="ptr-ring" viewBox="0 0 24 24">
+        <circle class="track" cx="12" cy="12" r="9.5"></circle>
+        <g class="glyph-check">
+          <path class="check" d="M6.5 12.5 l4 4 7-8"></path>
+        </g>
+        <g class="glyph-note">
+          <path class="note-body" d="M7 4.5h10a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-11a2 2 0 0 1 2-2Z"></path>
+          <path class="note-line" d="M8.5 9.5h7"></path>
+          <path class="note-line" d="M8.5 12.5h4.5"></path>
+        </g>
+      </svg>
+      <span class="ptr-label" data-zh="松开刷新" data-en="Release to refresh">松开刷新</span>
+    </div>
+  </div>
+
+  <div class="bar">
+    <div class="bar-in">
+      <a class="brand" href="#top" aria-label="Acta 行记"><img src="assets/acta-logo.svg" alt="Acta 行记"></a>
+      <div class="bar-r">
+        <div class="lang">
+          <button id="langSwitch" aria-label="Language" aria-haspopup="true" aria-expanded="false">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <circle cx="12" cy="12" r="9"></circle>
+              <path d="M3 12h18"></path>
+              <path d="M12 3a15 15 0 0 1 0 18a15 15 0 0 1 0-18z"></path>
+            </svg>
+            <span class="tip" data-zh="语言" data-en="Language">语言</span>
+          </button>
+          <div class="lang-menu" id="langMenu" role="menu" aria-label="Language">
+            <button role="menuitem" data-lang="zh">中文</button>
+            <button role="menuitem" data-lang="en">English</button>
+          </div>
+        </div>
+        <a class="icon-btn" href="#download" aria-label="下载">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M12 3v12"></path>
+            <path d="m7 10 5 5 5-5"></path>
+            <path d="M5 21h14"></path>
+          </svg>
+          <span class="tip" data-zh="下载" data-en="Download">下载</span>
+        </a>
+        <a class="icon-btn js-web" href="https://acta.mogrowangstudio.top" target="_blank" rel="noopener" aria-label="体验网页版">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <rect x="3" y="4" width="18" height="16" rx="3"></rect>
+            <path d="M3 9h18"></path>
+            <path d="M9 16h6"></path>
+          </svg>
+          <span class="tip" data-zh="体验网页版" data-en="Try the web app">体验网页版</span>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <main id="top">
+    <h1 data-reveal data-zh="边<span class='act'>行</span>，边<span class='note'>记</span>。"
+      data-en="<span class='act'>Act</span>, and <span class='note'>Note</span>.">边<span class="act">行</span>，边<span
+        class="note">记</span>。</h1>
+    <p class="lead" data-reveal style="--i:1"
+      data-zh="Acta 是一个本地优先、开源的应用。
+笔记和待办位于同一个工作区。"
+      data-en="Acta is a local-first, open-source app.
+Notes and tasks live in the same workspace.">
+      Acta 是一个本地优先、开源的应用。
+笔记和待办位于同一个工作区。</p>
+
+    <div class="cta" data-reveal style="--i:2">
+      <a class="btn btn-primary" href="#download" data-zh="下载" data-en="Download">下载</a>
+      <a class="js-web" href="https://acta.mogrowangstudio.top" target="_blank" rel="noopener">
+          <span data-zh="体验网页版" data-en="Try the web app">体验网页版</span>
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M14 4h6v6"></path>
+            <path d="M20 4 10 14"></path>
+            <path d="M20 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h5"></path>
+          </svg>
+        </a>
+    </div>
+
+    <div class="figure" data-reveal="fade" style="--i:3">
+      <figure>
+        <img src="assets/preview-desktop.png" alt="Acta 桌面主界面" loading="eager">
+        <figcaption data-zh="Acta 在桌面端上的主界面。"
+          data-en="Acta’s main window on desktop.">Acta
+          在桌面端上的主界面。</figcaption>
+      </figure>
+    </div>
+
+    <section class="prose">
+      <h2 data-reveal data-zh="笔记和待办，相得益彰。" data-en="Notes and tasks, better together"></h2>
+      <p data-reveal style="--i:1"
+        data-zh="市面上，一些笔记软件只管记，待办软件只管做。
+想法和行动被分在了两个地方，来回切换有些麻烦。
+Acta 使其一站式搞定。"
+        data-en="Many note apps only capture; task apps only track. Thoughts and actions sit in two places, and switching between them is a chore. Acta handles it all in one place.">
+        </p>
+
+      <h2 data-reveal data-zh="双向关联，翻阅超快速。" data-en="Two-way links, blazing fast"></h2>
+      <p data-reveal style="--i:1"
+        data-zh="笔记和待办之间的关联，从哪一侧建立都行。
+根据笔记找待办，根据待办找笔记，随你。"
+        data-en="Link a note and a task from either direction. Go from a note to its task, or from a task back to its note — your call.">
+        </p>
+
+      <h2 data-reveal data-zh="日历，有条不紊。" data-en="A calendar, kept tidy"></h2>
+      <p data-reveal style="--i:1"
+        data-zh="Acta 的日历有：年、月、周、日 四层。
+月视图还带周数，一个月里待办的疏密一眼看清。"
+        data-en="Acta’s calendar has four layers: year, month, week, day. The month view even carries week numbers, so a month’s task density reads at a glance.">
+      </p>
+    </section>
+
+    <div class="figure" data-reveal="fade">
+      <figure>
+        <img src="assets/preview-todo.png" alt="Acta 待办视图" loading="lazy">
+        <figcaption data-zh="Acta 待办界面。"
+          data-en="Acta’s task view.">Acta 待办界面。</figcaption>
+      </figure>
+    </div>
+
+    <section class="prose">
+      <h2 data-reveal data-zh="开源免费，多平台支持。" data-en="Open source, free, multi-platform"></h2>
+      <p data-reveal style="--i:1" data-zh="笔记、待办、视图和大部分同步逻辑相同。
+每个平台拥有专属适配层。"
+        data-en="Notes, tasks, views, and most sync logic stay the same across platforms. Each platform has its own adapter layer.">
+        </p>
+      <ul class="items" data-reveal style="--i:2">
+        <li><b data-zh="桌面端" data-en="Desktop"></b><span data-zh="使用 Tauri 构建。支持 Windows 与 macOS。"
+            data-en="Built with Tauri. Supports Windows and macOS."></span></li>
+        <li><b>Android</b><span data-zh="使用 Capacitor 8 构建。传统 APK 安装。"
+            data-en="Built with Capacitor 8. Installs as a traditional APK."></span></li>
+        <li><b data-zh="网页版" data-en="Browser">网页版</b><span data-zh="支持 PWA，为 iOS/iPadOS 提供临时性支持。"
+            data-en="Supports PWA, with provisional support for iOS/iPadOS.">支持 PWA，为 iOS/iPadOS 提供临时性支持。</span>
+        </li>
+      </ul>
+
+      <h2 data-reveal data-zh="资料，都在你手上。" data-en="Your data, in your hands"></h2>
+      <p data-reveal style="--i:1"
+        data-zh="Acta 不依赖云端。
+资料默认留在本地，想去云端同步，你也可以自行配置。
+每则笔记和待办单独存成一个文件，随时能重温。"
+        data-en="Acta doesn’t depend on the cloud. Your data stays local by default; if you want cloud sync, you can configure it yourself. Each note and task is its own file, always ready to revisit.">
+       </p>
+      <p data-reveal style="--i:2"
+        data-zh="同步时，只读本地同步目录。WebDAV 的凭据也只会发给你自己配置的服务器。"
+        data-en="When syncing, it only reads a local synced folder. WebDAV credentials go only to the server you configure.">
+        同步时，只读本地同步目录。WebDAV 的凭据也只会发给你自己配置的服务器。
+      </p>
+    </section>
+
+    <section id="download">
+      <h2 data-reveal data-zh="下载 Acta" data-en="Download Acta"></h2>
+      <div class="dl" data-reveal style="--i:1">
+        <a href="https://github.com/MogroWang/Acta/releases" target="_blank" rel="noopener"><span data-zh="Windows"
+            data-en="Windows">Windows</span><span class="v" data-zh="x64 · 免安装便携版" data-en="x64 · portable">x64 ·
+            免安装便携版</span></a>
+        <a href="https://github.com/MogroWang/Acta/releases" target="_blank" rel="noopener"><span>Android</span><span
+            class="v">APK</span></a>
+        <a href="https://acta.mogrowangstudio.top" target="_blank" rel="noopener"><span data-zh="网页版 / PWA"
+            data-en="Browser / PWA">网页版 / PWA</span><span class="v" data-zh="在线打开" data-en="open online">在线打开</span></a>
+        <a href="https://github.com/MogroWang/Acta" target="_blank" rel="noopener"><span data-zh="源代码"
+            data-en="Source">源代码</span><span class="v">GitHub · MIT</span></a>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <span>© 2026 MogroWang Studio · Acta</span>
+    <span class="links">
+      <a href="https://github.com/MogroWang/Acta" target="_blank" rel="noopener">GitHub</a>
+      <a href="https://github.com/MogroWang/Acta/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>
+      <a href="https://www.mogrowangstudio.top/" target="_blank" rel="noopener">MogroWang Studio</a>
+    </span>
+  </footer>
+
+  <div class="dialog" id="dialog" role="alertdialog" aria-modal="true" aria-labelledby="dialogTitle" aria-describedby="dialogMsg">
+    <div class="dialog-backdrop"></div>
+    <div class="dialog-card">
+      <h3 id="dialogTitle" data-zh="打开网页版 Acta？" data-en="Open the Acta web app?">打开网页版 Acta？</h3>
+      <p id="dialogMsg" data-zh="将在新标签页中打开网页版 Acta。要继续吗？"
+        data-en="The Acta web app will open in a new tab. Continue?">将在新标签页中打开网页版 Acta。要继续吗？</p>
+      <div class="dialog-actions">
+        <button class="dlg-btn dlg-cancel" id="dialogCancel" data-zh="取消" data-en="Cancel">取消</button>
+        <button class="dlg-btn dlg-primary" id="dialogConfirm" data-zh="打开" data-en="Open">打开</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      "use strict";
+      var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+      /* shrink the top bar into a pill after a 5% scroll dead zone */
+      var bar = document.querySelector(".bar");
+      function threshold() {
+        var max = document.documentElement.scrollHeight - window.innerHeight;
+        return max > 0 ? max * 0.05 : 40;
+      }
+      function onScroll() { if (bar) { bar.classList.toggle("scrolled", window.scrollY > threshold()); } }
+      if ("scrollRestoration" in history) { history.scrollRestoration = "manual"; }
+      window.addEventListener("scroll", onScroll, { passive: true });
+      window.addEventListener("pageshow", function (e) { if (e.persisted) { window.scrollTo(0, 0); onScroll(); } });
+      window.scrollTo(0, 0);
+      onScroll();
+
+      var io = typeof IntersectionObserver !== "undefined" && !reduce
+        ? new IntersectionObserver(function (entries) {
+          entries.forEach(function (e) {
+            if (e.isIntersecting) { e.target.classList.add("in"); io.unobserve(e.target); }
+          });
+        }, { threshold: 0.15, rootMargin: "0px 0px -6% 0px" })
+        : null;
+      document.querySelectorAll("[data-reveal]").forEach(function (el) {
+        if (io) { io.observe(el); } else { el.classList.add("in"); }
+      });
+
+      function applyLang(lang, animate) {
+        var swap = function () {
+          document.documentElement.lang = lang === "en" ? "en" : "zh-CN";
+          document.body.classList.toggle("lang-zh", lang !== "en");
+          document.title = lang === "en" ? "Introducing Acta." : "来认识一下『Acta·行记』。";
+          document.querySelectorAll("[data-zh]").forEach(function (el) {
+            var txt = lang === "en" ? el.getAttribute("data-en") : el.getAttribute("data-zh");
+            if (txt == null) return;
+            if (txt.indexOf("<") !== -1) { el.innerHTML = txt; }
+            else { el.textContent = txt; }
+          });
+          document.querySelectorAll(".lang-menu button").forEach(function (b) {
+            b.classList.toggle("on", b.getAttribute("data-lang") === lang);
+          });
+          try { localStorage.setItem("acta-intro-lang", lang); } catch (e) { }
+        };
+        var main = document.querySelector("main");
+        if (!animate || reduce || !main) { swap(); return; }
+        main.classList.add("switching");
+        setTimeout(function () {
+          swap();
+          requestAnimationFrame(function () {
+            main.classList.remove("switching");
+          });
+        }, 200);
+      }
+      var saved = null;
+      try { saved = localStorage.getItem("acta-intro-lang"); } catch (e) { }
+      applyLang(saved === "en" || saved === "zh" ? saved : "zh", false);
+
+      var sw = document.getElementById("langSwitch");
+      var menu = document.getElementById("langMenu");
+      function setMenu(open) {
+        if (!menu) return;
+        menu.classList.toggle("open", open);
+        if (sw) { sw.setAttribute("aria-expanded", open ? "true" : "false"); }
+      }
+      if (sw && menu) {
+        sw.addEventListener("click", function (e) {
+          e.stopPropagation();
+          setMenu(!menu.classList.contains("open"));
+        });
+        menu.querySelectorAll("button").forEach(function (b) {
+          b.addEventListener("click", function () {
+            applyLang(b.getAttribute("data-lang"), true);
+            setMenu(false);
+          });
+        });
+        document.addEventListener("click", function (e) {
+          if (!sw.contains(e.target) && !menu.contains(e.target)) { setMenu(false); }
+        });
+        document.addEventListener("keydown", function (e) {
+          if (e.key === "Escape") { setMenu(false); }
+        });
+      }
+
+      /* confirm dialog: intercept the "try the web" links, ask, then open a tab */
+      var WEB_URL = "https://acta.mogrowangstudio.top";
+      var dialog = document.getElementById("dialog");
+      var dlgCancel = document.getElementById("dialogCancel");
+      var dlgConfirm = document.getElementById("dialogConfirm");
+      var lastTrigger = null;
+      function openDialog(trigger) {
+        if (!dialog) return;
+        lastTrigger = trigger || null;
+        dialog.classList.add("open");
+        document.body.style.overflow = "hidden";
+        if (dlgConfirm) { dlgConfirm.focus(); }
+      }
+      function closeDialog() {
+        if (!dialog) return;
+        dialog.classList.remove("open");
+        document.body.style.overflow = "";
+        if (lastTrigger) { lastTrigger.focus(); lastTrigger = null; }
+      }
+      document.querySelectorAll(".js-web").forEach(function (a) {
+        a.addEventListener("click", function (e) {
+          e.preventDefault();
+          openDialog(a);
+        });
+      });
+      if (dlgCancel) { dlgCancel.addEventListener("click", closeDialog); }
+      if (dlgConfirm) {
+        dlgConfirm.addEventListener("click", function () {
+          window.open(WEB_URL, "_blank", "noopener");
+          closeDialog();
+        });
+      }
+      if (dialog) {
+        dialog.addEventListener("click", function (e) {
+          if (e.target === dialog) { closeDialog(); }
+        });
+        document.addEventListener("keydown", function (e) {
+          if (e.key === "Escape") { closeDialog(); }
+        });
+      }
+
+      /* pull-to-refresh: pull down from the top on touch devices to reload */
+      var isTouch = ("ontouchstart" in window) || navigator.maxTouchPoints > 0;
+      var ptrEl = document.getElementById("ptr");
+      if (isTouch && ptrEl) {
+        var PTR_THRESHOLD = 80;
+        var PTR_PULL_MAX = 98;
+        var NOTE_CHANCE = 0.35;
+        var startY = 0, pulling = false, dist = 0, holdTimer = null;
+        var glyphs = {
+          check: Array.prototype.slice.call(ptrEl.querySelectorAll(".glyph-check path")),
+          note: Array.prototype.slice.call(ptrEl.querySelectorAll(".glyph-note path"))
+        };
+        var active = glyphs.check;
+        Object.keys(glyphs).forEach(function (g) {
+          glyphs[g].forEach(function (p) {
+            var L = p.getTotalLength();
+            p._L = L;
+            p.style.strokeDasharray = L;
+            p.style.strokeDashoffset = L;
+          });
+        });
+        function hideAll() {
+          Object.keys(glyphs).forEach(function (g) {
+            glyphs[g].forEach(function (p) { p.style.strokeDashoffset = p._L; });
+          });
+        }
+        function resetPtr() {
+          clearTimeout(holdTimer);
+          pulling = false;
+          dist = 0;
+          document.body.classList.remove("ptr-active", "ptr-loading", "ptr-hold", "ptr-dragging");
+          document.body.style.setProperty("--ptr", "0px");
+          hideAll();
+        }
+        function scheduleHold() {
+          clearTimeout(holdTimer);
+          holdTimer = setTimeout(function () {
+            if (!pulling) return;
+            document.body.classList.add("ptr-hold");
+          }, 300);
+        }
+        document.addEventListener("touchstart", function (e) {
+          if (window.scrollY > 0 || document.body.classList.contains("ptr-loading")) return;
+          startY = e.touches[0].clientY;
+          pulling = true;
+          dist = 0;
+          var note = Math.random() < NOTE_CHANCE;
+          document.body.classList.toggle("ptr-note", note);
+          active = note ? glyphs.note : glyphs.check;
+          hideAll();
+        }, { passive: true });
+        document.addEventListener("touchmove", function (e) {
+          if (!pulling) return;
+          var d = e.touches[0].clientY - startY;
+          if (d <= 0) { resetPtr(); return; }
+          dist = d;
+          var r = Math.min(d * 0.5, PTR_PULL_MAX);
+          document.body.classList.add("ptr-dragging", "ptr-active");
+          document.body.classList.remove("ptr-hold");
+          document.body.style.setProperty("--ptr", r + "px");
+          var p = Math.min(d / PTR_THRESHOLD, 1);
+          active.forEach(function (path) {
+            path.style.strokeDashoffset = (path._L * (1 - p)).toFixed(1);
+          });
+          scheduleHold();
+        }, { passive: true });
+        document.addEventListener("touchend", function () {
+          if (!pulling) return;
+          clearTimeout(holdTimer);
+          document.body.classList.remove("ptr-dragging", "ptr-hold");
+          if (dist >= PTR_THRESHOLD) {
+            pulling = false;
+            document.body.classList.add("ptr-loading");
+            document.body.style.setProperty("--ptr", "60px");
+            setTimeout(function () { location.reload(); }, 400);
+          } else {
+            resetPtr();
+          }
+        });
+        document.addEventListener("touchcancel", resetPtr);
+      }
+    })();
+  </script>
+</body>
+
+</html>
