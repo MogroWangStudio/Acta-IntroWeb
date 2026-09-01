@@ -700,6 +700,68 @@
       gap: 18px
     }
 
+    /* studio sign-off: the wordmark sits centered under the footer row.
+   hovering softly defocuses it while a line of ink text fades in over
+   its center, naming the destination. */
+    footer .studio-mark {
+      position: relative;
+      flex: 1 1 100%;
+      display: flex;
+      justify-content: center;
+      margin-top: 30px;
+      border-bottom: 0;
+      color: inherit
+    }
+
+    footer .studio-mark .mark-hint {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, calc(-50% + 5px));
+      white-space: nowrap;
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: .01em;
+      line-height: 1;
+      color: var(--ink);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .35s var(--ease), transform .35s var(--ease)
+    }
+
+    footer .studio-mark:hover .mark-hint,
+    footer .studio-mark:focus-visible .mark-hint {
+      opacity: 1;
+      transform: translate(-50%, -50%)
+    }
+
+    footer .studio-mark img {
+      display: block;
+      height: 20px;
+      width: auto;
+      opacity: .8;
+      transition: filter .55s var(--ease), opacity .55s var(--ease), transform .55s var(--ease)
+    }
+
+    footer .studio-mark:hover img,
+    footer .studio-mark:focus-visible img {
+      filter: blur(5px);
+      opacity: .55;
+      transform: scale(1.03)
+    }
+
+    footer .studio-mark:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 6px;
+      border-radius: 4px
+    }
+
+    @media (prefers-reduced-motion:reduce) {
+      footer .studio-mark img {
+        transition: none
+      }
+    }
+
     /* one subtle reveal: opacity + small translate, standard ease. */
     [data-reveal] {
       opacity: 0;
@@ -1024,10 +1086,306 @@
         max-width: calc(100% - 28px)
       }
     }
+
+    /* ambient background: a quiet loop of ripples, a self-drawing check
+   and writing strokes, all behind the content and barely there.
+   pure CSS, pointer-events off, hidden under prefers-reduced-motion. */
+    .bg-fx {
+      position: fixed;
+      inset: 0;
+      z-index: -1;
+      overflow: hidden;
+      pointer-events: none
+    }
+
+    .bg-fx i,
+    .bg-fx svg {
+      position: absolute;
+      display: block
+    }
+
+    .fx-spot {
+      width: 480px;
+      height: 480px
+    }
+
+    .fx-spot.fx-a {
+      left: 7vw;
+      top: 30vh;
+      animation: fx-drift-a 58s ease-in-out infinite
+    }
+
+    .fx-spot.fx-b {
+      left: 93vw;
+      top: 68vh;
+      animation: fx-drift-b 47s ease-in-out infinite;
+      animation-delay: -19s
+    }
+
+    /* each layer wanders along its own closed loop; the coprime periods
+       keep the combination from ever settling into a visible pattern */
+    @keyframes fx-drift-a {
+      0% {
+        transform: translate(calc(-50% - 1.6vw), calc(-50% + 1.2vh))
+      }
+
+      25% {
+        transform: translate(calc(-50% + 1.8vw), calc(-50% + 2.6vh))
+      }
+
+      50% {
+        transform: translate(calc(-50% + 2.6vw), calc(-50% - 1.8vh))
+      }
+
+      75% {
+        transform: translate(calc(-50% - 2.2vw), calc(-50% - 2.4vh))
+      }
+
+      100% {
+        transform: translate(calc(-50% - 1.6vw), calc(-50% + 1.2vh))
+      }
+    }
+
+    @keyframes fx-drift-b {
+      0% {
+        transform: translate(calc(-50% + 1.4vw), calc(-50% - 2.2vh))
+      }
+
+      30% {
+        transform: translate(calc(-50% - 2.4vw), calc(-50% - .8vh))
+      }
+
+      60% {
+        transform: translate(calc(-50% - 1vw), calc(-50% + 2.8vh))
+      }
+
+      85% {
+        transform: translate(calc(-50% + 2.2vw), calc(-50% + 1vh))
+      }
+
+      100% {
+        transform: translate(calc(-50% + 1.4vw), calc(-50% - 2.2vh))
+      }
+    }
+
+    .fx-spot i {
+      inset: 0;
+      border-radius: 50%;
+      border: 1.5px solid color-mix(in srgb, var(--accent) 38%, transparent);
+      opacity: 0;
+      animation: fx-ripple 10s cubic-bezier(.22, .61, .36, 1) infinite
+    }
+
+    .fx-spot i:nth-child(2) {
+      animation-delay: -3.33s
+    }
+
+    .fx-spot i:nth-child(3) {
+      animation-delay: -6.66s
+    }
+
+    @keyframes fx-ripple {
+      0% {
+        transform: scale(.22);
+        opacity: 0
+      }
+
+      12% {
+        opacity: .3
+      }
+
+      100% {
+        transform: scale(1);
+        opacity: 0
+      }
+    }
+
+    .fx-check {
+      left: 8vw;
+      top: 66vh;
+      width: 76px;
+      height: 76px;
+      opacity: .26;
+      animation: fx-drift-check 38s ease-in-out infinite;
+      animation-delay: -7s
+    }
+
+    @keyframes fx-drift-check {
+      0% {
+        transform: translate(0, 0) rotate(0deg)
+      }
+
+      30% {
+        transform: translate(1.6vw, -2.2vh) rotate(4deg)
+      }
+
+      55% {
+        transform: translate(2.6vw, 1.4vh) rotate(6deg)
+      }
+
+      80% {
+        transform: translate(-1vw, 2.4vh) rotate(1deg)
+      }
+
+      100% {
+        transform: translate(0, 0) rotate(0deg)
+      }
+    }
+
+    .fx-check path {
+      stroke: color-mix(in srgb, var(--todo) 55%, transparent);
+      stroke-width: 2.6;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      stroke-dasharray: 1;
+      stroke-dashoffset: 1;
+      animation: fx-check 12s cubic-bezier(.45, .05, .35, .95) infinite
+    }
+
+    @keyframes fx-check {
+      0% {
+        stroke-dashoffset: 1;
+        opacity: 0
+      }
+
+      5% {
+        opacity: 1
+      }
+
+      16% {
+        stroke-dashoffset: 0
+      }
+
+      32% {
+        stroke-dashoffset: 0;
+        opacity: 1
+      }
+
+      44% {
+        stroke-dashoffset: 1;
+        opacity: 1
+      }
+
+      50%,
+      100% {
+        stroke-dashoffset: 1;
+        opacity: 0
+      }
+    }
+
+    .fx-note {
+      right: 7vw;
+      top: 19vh;
+      width: 150px;
+      height: 100px;
+      opacity: .16;
+      animation: fx-drift-note 51s ease-in-out infinite;
+      animation-delay: -13s
+    }
+
+    @keyframes fx-drift-note {
+      0% {
+        transform: translate(0, 0) rotate(-4deg)
+      }
+
+      35% {
+        transform: translate(-2.2vw, 1.8vh) rotate(-7deg)
+      }
+
+      65% {
+        transform: translate(-1vw, 3vh) rotate(-2deg)
+      }
+
+      85% {
+        transform: translate(-2.8vw, -1.6vh) rotate(-5deg)
+      }
+
+      100% {
+        transform: translate(0, 0) rotate(-4deg)
+      }
+    }
+
+    .fx-note path {
+      stroke: color-mix(in srgb, var(--note) 55%, transparent);
+      stroke-width: 3;
+      stroke-linecap: round;
+      stroke-dasharray: 1;
+      stroke-dashoffset: 1;
+      animation: fx-write 11s cubic-bezier(.3, .1, .3, .95) infinite
+    }
+
+    .fx-note path:nth-child(2) {
+      animation-delay: 1s
+    }
+
+    .fx-note path:nth-child(3) {
+      animation-delay: 2s
+    }
+
+    @keyframes fx-write {
+      0% {
+        stroke-dashoffset: 1;
+        opacity: 0
+      }
+
+      3% {
+        opacity: 1
+      }
+
+      14% {
+        stroke-dashoffset: 0
+      }
+
+      74% {
+        stroke-dashoffset: 0;
+        opacity: 1
+      }
+
+      82% {
+        opacity: 0
+      }
+
+      100% {
+        stroke-dashoffset: 1;
+        opacity: 0
+      }
+    }
+
+    @media (max-width:900px) {
+      .fx-check,
+      .fx-note {
+        display: none
+      }
+
+      .fx-spot {
+        width: 320px;
+        height: 320px
+      }
+    }
+
+    @media (prefers-reduced-motion:reduce) {
+      .bg-fx {
+        display: none
+      }
+    }
   </style>
 </head>
 
 <body>
+
+  <!-- ambient background layer: ripples, a self-drawing check, writing strokes -->
+  <div class="bg-fx" aria-hidden="true">
+    <div class="fx-spot fx-a"><i></i><i></i><i></i></div>
+    <div class="fx-spot fx-b"><i></i><i></i><i></i></div>
+    <svg class="fx-check" viewBox="0 0 48 48" fill="none" aria-hidden="true">
+      <path d="M10 26l9 9 19-21" pathLength="1"></path>
+    </svg>
+    <svg class="fx-note" viewBox="0 0 96 64" fill="none" aria-hidden="true">
+      <path d="M6 14h56" pathLength="1"></path>
+      <path d="M6 32h72" pathLength="1"></path>
+      <path d="M6 50h44" pathLength="1"></path>
+    </svg>
+  </div>
 
   <div class="ptr" id="ptr" aria-hidden="true">
     <div class="ptr-inner">
@@ -1200,8 +1558,11 @@ Acta 使其一站式搞定。"
     <span class="links">
       <a href="https://github.com/MogroWang/Acta" target="_blank" rel="noopener">GitHub</a>
       <a href="https://github.com/MogroWang/Acta/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>
-      <a href="https://www.mogrowangstudio.top/" target="_blank" rel="noopener">MogroWang Studio</a>
     </span>
+    <a class="studio-mark" href="https://www.mogrowangstudio.top/" target="_blank" rel="noopener">
+      <img src="assets/mogrowang-studio.svg" alt="MogroWang Studio" width="227" height="20">
+      <span class="mark-hint" data-zh="点击前往 MogroWang Studio 官网" data-en="Visit the MogroWang Studio website">点击前往 MogroWang Studio 官网</span>
+    </a>
   </footer>
 
   <div class="dialog" id="dialog" role="alertdialog" aria-modal="true" aria-labelledby="dialogTitle" aria-describedby="dialogMsg">
