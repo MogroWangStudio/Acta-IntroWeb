@@ -14,9 +14,9 @@ Acta 的落地页（landing page），部署于 GitHub Pages，域名 `acta.mogr
 
 ## 页面内容
 
-- **特性介绍** —— 笔记与待办同工作区、笔记/待办双向关联、年/月/周/日四层日历、本地优先与自配置 WebDAV 同步
-- **平台矩阵** —— 桌面端（Tauri，Windows / macOS）、Android（Capacitor 8，APK）、网页版（PWA，iOS/iPadOS 临时性支持）
-- **下载区** —— 指向 GitHub Releases 与网页版
+- **特性介绍** —— 笔记与待办同工作区、笔记/待办双向关联、打卡式待办与子任务（顺序执行、批量添加、导出清单）、年/月/周/日四层日历、本地优先与 WebDAV / 局域网直接互传同步、回收站与操作历史回溯
+- **平台矩阵** —— 桌面端（Tauri，Windows / macOS）、Android（Capacitor 8，APK，应用内自动更新）、网页版（PWA，离线缓存，iOS/iPadOS 临时性支持）、界面语言（简体中文 / 繁體中文 / English）
+- **下载区** —— 指向 GitHub Releases（Windows 便携版、macOS DMG、Android APK）与网页版
 - **中英双语** —— 右上角切换，选择记忆在 `localStorage`（键 `acta-intro-lang`）
 
 ## 一些实现细节
@@ -52,7 +52,7 @@ npx serve .
 
 ## 版本
 
-采用**日期版本号**（`YYYYMMDD`），每次页面更新递增，明细见 [CHANGELOG.md](CHANGELOG.md)。当前版本：**20260901**，同时展示于页面页脚。
+采用**日期版本号**（`YYYYMMDD`），每次页面更新递增，明细见 [CHANGELOG.md](CHANGELOG.md)。当前版本：**20261015**，同时展示于页面页脚。
 
 ## 许可
 

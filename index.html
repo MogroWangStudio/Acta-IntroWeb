@@ -466,6 +466,13 @@
       box-shadow: rgba(135, 128, 99, 0.15) 0px 17px 30px;
     }
 
+    /* portrait (phone) screenshots read better narrow, not stretched full measure */
+    figure img.portrait {
+      width: min(320px, 82%);
+      margin: 0 auto;
+      border-radius: 26px;
+    }
+
     figcaption {
       margin-top: 20px;
       font-size: 13.5px;
@@ -1491,6 +1498,17 @@ Acta 使其一站式搞定。"
         data-en="Link a note and a task from either direction. Go from a note to its task, or from a task back to its note — your call.">
         </p>
 
+      <h2 data-reveal data-zh="打卡与子任务，步步推进。" data-en="Check-ins and subtasks, step by step"></h2>
+      <p data-reveal style="--i:1"
+        data-zh="想坚持的事，交给打卡式待办。
+每天打卡一次，连续与累计天数一目了然，最近七天的记录就在手边。"
+        data-en="Hand recurring habits to check-in tasks. Check in once a day — streaks, totals, and your last seven days are always in view.">
+        </p>
+      <p data-reveal style="--i:2"
+        data-zh="更大的目标拆成子任务：可以按顺序执行，可以批量粘贴，也能一键导出成清单。"
+        data-en="Break bigger goals into subtasks — run them in order, batch-add them, or export them as a checklist.">
+        </p>
+
       <h2 data-reveal data-zh="日历，有条不紊。" data-en="A calendar, kept tidy"></h2>
       <p data-reveal style="--i:1"
         data-zh="Acta 的日历有：年、月、周、日 四层。
@@ -1501,9 +1519,19 @@ Acta 使其一站式搞定。"
 
     <div class="figure" data-reveal="fade">
       <figure>
-        <img src="assets/preview-todo.png" alt="Acta 待办视图" loading="lazy">
-        <figcaption data-zh="Acta 待办界面。"
-          data-en="Acta’s task view.">Acta 待办界面。</figcaption>
+        <img src="assets/preview-todo.png" alt="Acta 待办编辑器与子任务" loading="lazy">
+        <figcaption data-zh="Acta 的待办编辑器：优先级、双向关联、子任务进度与补充说明。"
+          data-en="Acta’s task editor: priority, two-way links, subtask progress, and notes.">Acta
+          的待办编辑器：优先级、双向关联、子任务进度与补充说明。</figcaption>
+      </figure>
+    </div>
+
+    <div class="figure" data-reveal="fade">
+      <figure>
+        <img src="assets/preview-calendar.png" alt="Acta 月视图日历" loading="lazy">
+        <figcaption data-zh="Acta 的月视图日历，附周数与当日安排。"
+          data-en="Acta’s month view, with week numbers and each day’s plan.">Acta
+          的月视图日历，附周数与当日安排。</figcaption>
       </figure>
     </div>
 
@@ -1516,24 +1544,37 @@ Acta 使其一站式搞定。"
       <ul class="items" data-reveal style="--i:2">
         <li><b data-zh="桌面端" data-en="Desktop"></b><span data-zh="使用 Tauri 构建。支持 Windows 与 macOS。"
             data-en="Built with Tauri. Supports Windows and macOS."></span></li>
-        <li><b>Android</b><span data-zh="使用 Capacitor 8 构建。传统 APK 安装。"
-            data-en="Built with Capacitor 8. Installs as a traditional APK."></span></li>
-        <li><b data-zh="网页版" data-en="Browser">网页版</b><span data-zh="支持 PWA，为 iOS/iPadOS 提供临时性支持。"
-            data-en="Supports PWA, with provisional support for iOS/iPadOS.">支持 PWA，为 iOS/iPadOS 提供临时性支持。</span>
+        <li><b>Android</b><span data-zh="使用 Capacitor 8 构建。以 APK 安装，支持应用内自动更新。"
+            data-en="Built with Capacitor 8. Installs as an APK, with in-app updates."></span></li>
+        <li><b data-zh="网页版" data-en="Browser">网页版</b><span data-zh="支持 PWA 与离线缓存，为 iOS/iPadOS 提供临时性支持。"
+            data-en="PWA with offline caching, plus provisional support for iOS/iPadOS.">支持 PWA 与离线缓存，为 iOS/iPadOS 提供临时性支持。</span>
+        </li>
+        <li><b data-zh="界面语言" data-en="Languages">界面语言</b><span data-zh="简体中文、繁體中文与 English，另有多种主题与字体可选。"
+            data-en="Simplified Chinese, Traditional Chinese, and English — plus a choice of themes and typefaces.">简体中文、繁體中文与 English，另有多种主题与字体可选。</span>
         </li>
       </ul>
+    </section>
 
+    <div class="figure" data-reveal="fade">
+      <figure>
+        <img src="assets/preview-mobile.png" alt="Acta Android 端待办列表" class="portrait" loading="lazy">
+        <figcaption data-zh="Android 端的待办列表，与桌面端同一份数据、同一套界面。"
+          data-en="The task list on Android — same data, same interface as desktop.">Android
+          端的待办列表，与桌面端同一份数据、同一套界面。</figcaption>
+      </figure>
+    </div>
+
+    <section class="prose">
       <h2 data-reveal data-zh="资料，都在你手上。" data-en="Your data, in your hands"></h2>
       <p data-reveal style="--i:1"
         data-zh="Acta 不依赖云端。
-资料默认留在本地，想去云端同步，你也可以自行配置。
-每则笔记和待办单独存成一个文件，随时能重温。"
-        data-en="Acta doesn’t depend on the cloud. Your data stays local by default; if you want cloud sync, you can configure it yourself. Each note and task is its own file, always ready to revisit.">
+资料默认留在本地，每则笔记和待办都是独立文件，随时能重温；想同步，可以配置自己的 WebDAV（凭据只发给你填写的服务器），也可以让两台设备在同一局域网内直接互传完整档案，不经过任何服务器。"
+        data-en="Acta doesn’t depend on the cloud. Your data stays local by default — each note and task is its own file, always ready to revisit. To sync, configure your own WebDAV (credentials go only to the server you set), or let two devices exchange full archives directly over the local network, with no server in between.">
        </p>
       <p data-reveal style="--i:2"
-        data-zh="同步时，只读本地同步目录。WebDAV 的凭据也只会发给你自己配置的服务器。"
-        data-en="When syncing, it only reads a local synced folder. WebDAV credentials go only to the server you configure.">
-        同步时，只读本地同步目录。WebDAV 的凭据也只会发给你自己配置的服务器。
+        data-zh="删除的内容先进回收站，永不自动清空；最近的操作，还能在历史记录里随时回溯。"
+        data-en="Deleted items rest in a trash that never auto-empties, and recent actions can be rolled back from history.">
+        删除的内容先进回收站，永不自动清空；最近的操作，还能在历史记录里随时回溯。
       </p>
     </section>
 
@@ -1543,6 +1584,9 @@ Acta 使其一站式搞定。"
         <a href="https://github.com/MogroWang/Acta/releases" target="_blank" rel="noopener"><span data-zh="Windows"
             data-en="Windows">Windows</span><span class="v" data-zh="x64 · 免安装便携版" data-en="x64 · portable">x64 ·
             免安装便携版</span></a>
+        <a href="https://github.com/MogroWang/Acta/releases" target="_blank" rel="noopener"><span
+            data-zh="macOS" data-en="macOS">macOS</span><span class="v" data-zh="Apple 芯片 · DMG"
+            data-en="Apple silicon · DMG">Apple 芯片 · DMG</span></a>
         <a href="https://github.com/MogroWang/Acta/releases" target="_blank" rel="noopener"><span>Android</span><span
             class="v">APK</span></a>
         <a href="https://actaweb.mogrowangstudio.top" target="_blank" rel="noopener"><span data-zh="网页版 / PWA"
@@ -1555,7 +1599,7 @@ Acta 使其一站式搞定。"
 
   <footer>
     <!-- 网页版本号（日期制 YYYYMMDD），随每次更新递增，明细见 CHANGELOG.md -->
-    <span>© 2026 MogroWang Studio · Acta · <span class="ver">v20260901</span></span>
+    <span>© 2026 MogroWang Studio · Acta · <span class="ver">v20261015</span></span>
     <span class="links">
       <a href="https://github.com/MogroWang/Acta" target="_blank" rel="noopener">GitHub</a>
       <a href="https://github.com/MogroWang/Acta/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>
